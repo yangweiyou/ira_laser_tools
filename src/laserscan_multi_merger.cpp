@@ -136,10 +136,20 @@ LaserscanMerger::LaserscanMerger()
     nh.param("range_min", range_min, 0.45);
     nh.param("range_max", range_max, 25.0);
 
+    // wait for message to be activated before parsing topic.
+    istringstream iss(laserscan_topics);
+    vector<string> tokens;
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
+    boost::shared_ptr<sensor_msgs::LaserScan const> message;
+    for (uint i=0;i<tokens.size();i++) {
+        message = ros::topic::waitForMessage<sensor_msgs::LaserScan>(tokens[i], node_, ros::Duration(100));
+    }
+    ROS_INFO("Scan topics are activated.");
+
     this->laserscan_topic_parser();
 
-	point_cloud_publisher_ = node_.advertise<sensor_msgs::PointCloud2> (cloud_destination_topic.c_str(), 1, false);
-	laser_scan_publisher_ = node_.advertise<sensor_msgs::LaserScan> (scan_destination_topic.c_str(), 1, false);
+    point_cloud_publisher_ = node_.advertise<sensor_msgs::PointCloud2> (cloud_destination_topic.c_str(), 1, false);
+    laser_scan_publisher_ = node_.advertise<sensor_msgs::LaserScan> (scan_destination_topic.c_str(), 1, false);
 
 }
 
